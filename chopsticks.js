@@ -33,12 +33,14 @@ function render()
 	}
 
 	document.getElementById("current-player").innerHTML = "Player "+cur_player;
+
+	return winner;
 }	
 
 function gameLoop(move)
 {
 	var this_board=execMove(game_board,cur_player,move);
-
+	var winner="";
 	if(this_board)
 	{
 		game_board = this_board;
@@ -53,7 +55,7 @@ function gameLoop(move)
 			game_board = this_board;
 			cur_player = (cur_player === 1 )? 2 : 1;
 			errorLog("ai move : "+move);
-			render();
+			winner=render();
 		}
 		else
 		{
@@ -122,37 +124,47 @@ function execMove(this_board,this_player,move)
 	}
 }
 
-function i_to_move(index)
-{
-	switch(index)
-	{
-		case 0: 
-			return "ll"
-		case 1: 
-			return "lr"
-		case 2: 
-			return "rl"
-		case 3: 
-			return "rr"
-		case 4: 
-			return "s" 
-	}
-}
+// function i_to_move(index)
+// {
+// 	switch(index)
+// 	{
+// 		case 0: 
+// 			return "ll"
+// 		case 1: 
+// 			return "lr"
+// 		case 2: 
+// 			return "rl"
+// 		case 3: 
+// 			return "rr"
+// 		case 4: 
+// 			return "s" 
+// 	}
+// }
 
 function aiPlayer()
 {
 	simulated_board = JSON.parse(JSON.stringify(game_board));
-	ret = minMax(simulated_board,0,3);
+	console.log("simulating...........................................")
+	ret = minMax(simulated_board,2,0,4);
+	console.log("end simulation.......................................")
 	console.log("aiPlayer");
 	console.log(ret);
-	return i_to_move(ret[1]);
+	return ret[1];
 }
 
-function minMax(simulated_board,sim_score,depth)
+function minMax(simulated_board,mover,sim_score,depth)
 {
+	var sim_pre_player = "p"+mover
+	var sim_opp_player = "p"+((mover%2) + 1)
 	depth = depth-1;
 	if(depth == 0)
 		return [0,1];
+
+	console.log("minMax start")
+	console.log(sim_pre_player)
+	console.log(sim_opp_player)
+	console.log(JSON.stringify(simulated_board).substr(0,19))
+	console.log(JSON.stringify(simulated_board).substr(19,19))
 
 	if(JSON.stringify(simulated_board).substr(0,19) === '{"p1":{"l":0,"r":0}')
 	{
@@ -160,7 +172,7 @@ function minMax(simulated_board,sim_score,depth)
 		return [sim_score,1];
 	}
 
-	if(JSON.stringify(simulated_board).substr(19,19) === '{"p2":{"l":0,"r":0}')
+	if(JSON.stringify(simulated_board).substr(19,19) === ',"p2":{"l":0,"r":0}')
 	{
 		sim_score-=10;
 		return [sim_score,1];
@@ -169,18 +181,60 @@ function minMax(simulated_board,sim_score,depth)
 	if(simulated_board == false)
 		return [-1000,1];
 
-	ret=indexOfMax( [ 
-				minMax(execMove(simulated_board,(depth%2)+1,"ll"),sim_score,depth)[0],
-				minMax(execMove(simulated_board,(depth%2)+1,"lr"),sim_score,depth)[0],
-				minMax(execMove(simulated_board,(depth%2)+1,"rl"),sim_score,depth)[0],
-				minMax(execMove(simulated_board,(depth%2)+1,"rr"),sim_score,depth)[0],
-				minMax(execMove(simulated_board,(depth%2)+1,"s"),sim_score,depth)[0]
-			]);
+	var eval_array = [];
+	var mov_array = [];
 
-	console.log("minMax")
-	console.log(ret);
-	console.log(depth);
-	return ret;
+	if(simulated_board[sim_pre_player]["l"] > 0)
+	{
+		if(simulated_board[sim_opp_player]["l"] > 0)
+		{
+			console.log("ll")
+			eval_array.push(minMax(execMove(simulated_board,mover,"ll"),(mover%2) + 1,sim_score,depth)[0])
+			mov_array.push("ll")
+		}
+
+		if(simulated_board[sim_opp_player]["r"] > 0)
+		{
+			console.log("lr")
+			eval_array.push(minMax(execMove(simulated_board,mover,"lr"),(mover%2) + 1,sim_score,depth)[0])
+			mov_array.push("ll")
+		}
+
+		if(simulated_board[sim_pre_player]["r"] == 0 && simulated_board[sim_pre_player]["l"]%2 == 0)
+		{
+			console.log("ls")
+			eval_array.push(minMax(execMove(simulated_board,mover,"s"),(mover%2) + 1,sim_score,depth)[0])
+			mov_array.push("s")
+		}		
+	}
+
+	if(simulated_board[sim_pre_player]["r"] > 0)
+	{
+		if(simulated_board[sim_opp_player]["l"] > 0)
+		{
+			console.log("rl")
+			eval_array.push(minMax(execMove(simulated_board,mover,"rl"),(mover%2) + 1,sim_score,depth)[0])
+			mov_array.push("rl")
+		}
+		
+		if(simulated_board[sim_opp_player]["r"] > 0)
+		{
+			console.log("rr")
+			eval_array.push(minMax(execMove(simulated_board,mover,"rr"),(mover%2) + 1,sim_score,depth)[0])
+			mov_array.push("rr")
+		}
+
+		if(simulated_board[sim_pre_player]["l"] == 0 && simulated_board[sim_pre_player]["r"]%2 == 0)
+		{
+			console.log("rs")
+			eval_array.push(minMax(execMove(simulated_board,mover,"s"),(mover%2) + 1,sim_score,depth)[0])
+			mov_array.push("s")
+		}		
+	}
+
+	ret=indexOfMax( eval_array );
+
+	return [ ret[0], mov_array[ret[1]] ] ;
 }
 
 function indexOfMax(arr) {
