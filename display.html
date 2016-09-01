@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<style type="text/css">
+
+			td,th{
+				padding : 20 20 20 20; 
+			}
+		</style>
+	</head>
+	<body onload="render();">
+		<table border="solid black">
+			<thead>
+				<th></th>
+				<th>Left</th>
+				<th>Right</th>
+			</thead>
+			<tbody>
+				<tr>
+					<th>Player 2</th>
+					<td id="p2l" style="text-align: center;">0</td>
+					<td id="p2r" style="text-align: center;">0</td>
+				</tr>
+				<tr>
+					<th>Player 1</th>
+					<td id="p1l" style="text-align: center;">0</td>
+					<td id="p1r" style="text-align: center;">0</td>
+				</tr>
+			</tbody>
+		</table><br>
+		<p id="current-player">Move: Player1</p>
+		<button onclick="execMove('ll');">Left to Right</button><br><br>
+		<button onclick="execMove('lr');">Left to Left</button><br><br>
+		<button onclick="execMove('rl');">Right to Left</button><br><br>
+		<button onclick="execMove('rr');">Right to Right</button><br><br>
+		<button onclick="execMove('s');">Split</button>
+		<p id="error-log" style="color: red;"></p>
+		<script type="text/javascript" src="chopsticks.js"></script>
+	</body>
+</html>
