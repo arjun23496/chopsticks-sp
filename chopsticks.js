@@ -17,35 +17,47 @@ var simulated_board={};
 
 function render()
 {
-	var x,y,flag,winner="";
+	var x,y;
 	console.log(game_board);
 	for(x in game_board)
 	{
-		flag = true
 		for(y in game_board[x])
 		{
-			if(game_board[x] > 0)
-				flag = false
 			document.getElementById(x+y).innerHTML = game_board[x][y];
 		}
-		if(flag)
-			winner = (x=="p1")? "p2" : "p1";
 	}
 
 	document.getElementById("current-player").innerHTML = "Player "+cur_player;
+}
 
-	return winner;
-}	
+function checkCompletion()
+{
+	if(game_board["p1"]["l"]==0 && game_board["p1"]["r"]==0)
+	{
+		errorLog("you have lost")
+		return true;	
+	}
+	else if(game_board["p2"]["l"]==0 && game_board["p2"]["r"]==0)
+	{
+		errorLog("you have won !!!!!!!!!")
+		return true;
+	}
 
+	return false;
+}
 function gameLoop(move)
 {
 	var this_board=execMove(game_board,cur_player,move);
-	var winner="";
 	if(this_board)
 	{
 		game_board = this_board;
 		cur_player = (cur_player === 1 )? 2 : 1;
 		render();
+
+		if(checkCompletion())
+		{
+			return;
+		}
 
 		move=aiPlayer();
 		this_board=execMove(game_board,2,move)
@@ -55,7 +67,11 @@ function gameLoop(move)
 			game_board = this_board;
 			cur_player = (cur_player === 1 )? 2 : 1;
 			errorLog("ai move : "+move);
-			winner=render();
+			render();
+			if(checkCompletion())
+			{
+				return;
+			}
 		}
 		else
 		{
@@ -124,23 +140,6 @@ function execMove(this_board,this_player,move)
 	}
 }
 
-// function i_to_move(index)
-// {
-// 	switch(index)
-// 	{
-// 		case 0: 
-// 			return "ll"
-// 		case 1: 
-// 			return "lr"
-// 		case 2: 
-// 			return "rl"
-// 		case 3: 
-// 			return "rr"
-// 		case 4: 
-// 			return "s" 
-// 	}
-// }
-
 function aiPlayer()
 {
 	simulated_board = JSON.parse(JSON.stringify(game_board));
@@ -168,18 +167,23 @@ function minMax(simulated_board,mover,sim_score,depth)
 
 	if(JSON.stringify(simulated_board).substr(0,19) === '{"p1":{"l":0,"r":0}')
 	{
+		console.log("winning move");
 		sim_score+=10;
-		return [sim_score,1];
+		return [sim_score,"w"];
 	}
 
 	if(JSON.stringify(simulated_board).substr(19,19) === ',"p2":{"l":0,"r":0}')
 	{
+		console.log("losing move");
 		sim_score-=10;
-		return [sim_score,1];
+		return [sim_score,"l"];
 	}
 
 	if(simulated_board == false)
+	{
+		console.log("invalid move");
 		return [-1000,1];
+	}
 
 	var eval_array = [];
 	var mov_array = [];
@@ -189,6 +193,7 @@ function minMax(simulated_board,mover,sim_score,depth)
 		if(simulated_board[sim_opp_player]["l"] > 0)
 		{
 			console.log("ll")
+			console.log(mov_array)
 			eval_array.push(minMax(execMove(simulated_board,mover,"ll"),(mover%2) + 1,sim_score,depth)[0])
 			mov_array.push("ll")
 		}
@@ -196,13 +201,15 @@ function minMax(simulated_board,mover,sim_score,depth)
 		if(simulated_board[sim_opp_player]["r"] > 0)
 		{
 			console.log("lr")
+			console.log(mov_array)
 			eval_array.push(minMax(execMove(simulated_board,mover,"lr"),(mover%2) + 1,sim_score,depth)[0])
-			mov_array.push("ll")
+			mov_array.push("lr")
 		}
 
 		if(simulated_board[sim_pre_player]["r"] == 0 && simulated_board[sim_pre_player]["l"]%2 == 0)
 		{
 			console.log("ls")
+			console.log(mov_array)
 			eval_array.push(minMax(execMove(simulated_board,mover,"s"),(mover%2) + 1,sim_score,depth)[0])
 			mov_array.push("s")
 		}		
@@ -213,6 +220,7 @@ function minMax(simulated_board,mover,sim_score,depth)
 		if(simulated_board[sim_opp_player]["l"] > 0)
 		{
 			console.log("rl")
+			console.log(mov_array)
 			eval_array.push(minMax(execMove(simulated_board,mover,"rl"),(mover%2) + 1,sim_score,depth)[0])
 			mov_array.push("rl")
 		}
@@ -220,6 +228,7 @@ function minMax(simulated_board,mover,sim_score,depth)
 		if(simulated_board[sim_opp_player]["r"] > 0)
 		{
 			console.log("rr")
+			console.log(mov_array)
 			eval_array.push(minMax(execMove(simulated_board,mover,"rr"),(mover%2) + 1,sim_score,depth)[0])
 			mov_array.push("rr")
 		}
@@ -227,12 +236,18 @@ function minMax(simulated_board,mover,sim_score,depth)
 		if(simulated_board[sim_pre_player]["l"] == 0 && simulated_board[sim_pre_player]["r"]%2 == 0)
 		{
 			console.log("rs")
+			console.log(mov_array)
 			eval_array.push(minMax(execMove(simulated_board,mover,"s"),(mover%2) + 1,sim_score,depth)[0])
 			mov_array.push("s")
 		}		
 	}
 
 	ret=indexOfMax( eval_array );
+
+	console.log("move array")
+	console.log(mov_array)
+	console.log("ret")
+	console.log(ret)
 
 	return [ ret[0], mov_array[ret[1]] ] ;
 }
@@ -246,9 +261,10 @@ function indexOfMax(arr) {
     var maxIndex = 0;
     var m = [];
 
-    for (var i = 1; i < arr.length; i++) {
+    for (var i = 0; i < arr.length; i++) {
         if (arr[i] > max) {
         	m = [];
+        	m.push(i);
             maxIndex = i;
             max = arr[i];
         }
@@ -260,6 +276,9 @@ function indexOfMax(arr) {
 
     var ret = [ max, m[Math.floor(Math.random()*m.length)] ]
     console.log("indexOfMax")
+    console.log("m")
+    console.log(m)
+    console.log(maxIndex)
     console.log(arr)
     console.log(ret)
 
