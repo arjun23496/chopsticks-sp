@@ -156,10 +156,9 @@ function minMax(simulated_board,mover,sim_score,depth)
 	var sim_pre_player = "p"+mover
 	var sim_opp_player = "p"+((mover%2) + 1)
 	depth = depth-1;
-	if(depth == 0)
-		return [0,1];
 
 	console.log("minMax start")
+	console.log("depth : "+depth)
 	console.log(sim_pre_player)
 	console.log(sim_opp_player)
 	console.log(JSON.stringify(simulated_board).substr(0,19))
@@ -168,14 +167,14 @@ function minMax(simulated_board,mover,sim_score,depth)
 	if(JSON.stringify(simulated_board).substr(0,19) === '{"p1":{"l":0,"r":0}')
 	{
 		console.log("winning move");
-		sim_score+=10;
+		sim_score=10;
 		return [sim_score,"w"];
 	}
 
 	if(JSON.stringify(simulated_board).substr(19,19) === ',"p2":{"l":0,"r":0}')
 	{
 		console.log("losing move");
-		sim_score-=10;
+		sim_score=-10;
 		return [sim_score,"l"];
 	}
 
@@ -184,6 +183,9 @@ function minMax(simulated_board,mover,sim_score,depth)
 		console.log("invalid move");
 		return [-1000,1];
 	}
+
+	if(depth == 0)
+		return [0,1];
 
 	var eval_array = [];
 	var mov_array = [];
@@ -242,7 +244,7 @@ function minMax(simulated_board,mover,sim_score,depth)
 		}		
 	}
 
-	ret=indexOfMax( eval_array );
+	ret= (mover === 2)? indexOfMax( eval_array ) : indexOfMin( eval_array );
 
 	console.log("move array")
 	console.log(mov_array)
@@ -263,6 +265,39 @@ function indexOfMax(arr) {
 
     for (var i = 0; i < arr.length; i++) {
         if (arr[i] > max) {
+        	m = [];
+        	m.push(i);
+            maxIndex = i;
+            max = arr[i];
+        }
+        else if(arr[i] == max)
+        {
+        	m.push(i);
+        }
+    }
+
+    var ret = [ max, m[Math.floor(Math.random()*m.length)] ]
+    console.log("indexOfMax")
+    console.log("m")
+    console.log(m)
+    console.log(maxIndex)
+    console.log(arr)
+    console.log(ret)
+
+    return ret;
+}
+
+function indexOfMin(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    var max = arr[0];
+    var maxIndex = 0;
+    var m = [];
+
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i] < max) {
         	m = [];
         	m.push(i);
             maxIndex = i;
