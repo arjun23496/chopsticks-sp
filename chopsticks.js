@@ -1,6 +1,7 @@
 var cur_player=1;
 var error_num=0;
 var verbose = false;
+var viewAllErrors = true;
 var game_board = {
 
 					"p1": {
@@ -66,24 +67,29 @@ function gameLoop(move)
 			return;
 		}
 
-		move=aiPlayer();
-		this_board=execMove(game_board,2,move)
+		errorLog("AI working......");
+		aiPlayer(aiCallback);
+	}
+}
 
-		if(this_board)
+function aiCallback(move)
+{
+	this_board=execMove(game_board,2,move)
+
+	if(this_board)
+	{
+		game_board = this_board;
+		cur_player = (cur_player === 1 )? 2 : 1;
+		errorLog("ai move : "+move);
+		render();
+		if(checkCompletion())
 		{
-			game_board = this_board;
-			cur_player = (cur_player === 1 )? 2 : 1;
-			errorLog("ai move : "+move);
-			render();
-			if(checkCompletion())
-			{
-				return;
-			}
+			return;
 		}
-		else
-		{
-			errorLog("ai failed "+move);
-		}
+	}
+	else
+	{
+		errorLog("ai failed "+move);
 	}
 }
 
@@ -147,15 +153,17 @@ function execMove(this_board,this_player,move)
 	}
 }
 
-function aiPlayer()
+function aiPlayer(callback)
 {
+	viewAllErrors = false;
 	simulated_board = JSON.parse(JSON.stringify(game_board));
 	gameLog("simulating...........................................")
-	ret = minMax(simulated_board,2,0,4);
+	ret = minMax(simulated_board,2,0,9);
 	gameLog("end simulation.......................................")
 	gameLog("aiPlayer");
 	gameLog(ret);
-	return ret[1];
+	viewAllErrors = true;
+	callback(ret[1]);
 }
 
 function minMax(simulated_board,mover,sim_score,depth)
@@ -329,5 +337,6 @@ function indexOfMin(arr) {
 
 function errorLog(msg)
 {
-	document.getElementById("error-log").innerHTML = msg;
+	if(viewAllErrors)
+		document.getElementById("error-log").innerHTML = msg;
 }
