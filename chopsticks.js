@@ -17,6 +17,22 @@ var game_board = {
 
 var simulated_board={};
 
+function initialize()
+{
+	game_board = {
+					"p1": {
+						"l": 1,
+						"r": 1
+					},
+
+					"p2": {
+						"l": 1,
+						"r": 1
+					}
+				};
+	render();
+}
+
 function gameLog(msg)
 {
 	if(verbose)
@@ -35,7 +51,7 @@ function render()
 		}
 	}
 
-	document.getElementById("current-player").innerHTML = "Player "+cur_player;
+	document.getElementById("current-player").innerHTML = "Player 1";
 }
 
 function checkCompletion()
@@ -53,13 +69,13 @@ function checkCompletion()
 
 	return false;
 }
+
 function gameLoop(move)
 {
-	var this_board=execMove(game_board,cur_player,move);
+	var this_board=execMove(game_board,1,move);
 	if(this_board)
 	{
 		game_board = this_board;
-		cur_player = (cur_player === 1 )? 2 : 1;
 		render();
 
 		if(checkCompletion())
@@ -79,7 +95,6 @@ function aiCallback(move)
 	if(this_board)
 	{
 		game_board = this_board;
-		cur_player = (cur_player === 1 )? 2 : 1;
 		errorLog("ai move : "+move);
 		render();
 		if(checkCompletion())
